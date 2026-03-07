@@ -1,0 +1,19 @@
+{
+  "name": "AI Layout Generator",
+  "id": "ai-layout-generator",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ],
+    "devAllowedDomains": [
+      "http://localhost:8000"
+    ],
+    "reasoning": "Calls the local FastAPI backend (http://localhost:8000) to generate Figma layout JSON from natural-language prompts."
+  }
+}

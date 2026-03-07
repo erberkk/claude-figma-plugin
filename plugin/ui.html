@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0D0D12;
+      --surface: #13131A;
+      --surface2: #1A1A24;
+      --border: rgba(255,255,255,0.07);
+      --border-focus: rgba(160,130,255,0.5);
+      --accent: #A082FF;
+      --accent2: #5EEAD4;
+      --text: #E8E6F0;
+      --muted: #5A586A;
+      --error: #FF6B8A;
+      --success: #5EEAD4;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--muted) transparent;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    html::-webkit-scrollbar-track,
+    body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    html::-webkit-scrollbar-thumb,
+    body::-webkit-scrollbar-thumb {
+      background: var(--muted);
+      border-radius: 4px;
+    }
+
+    html::-webkit-scrollbar-thumb:hover,
+    body::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(160,130,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(160,130,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow orb */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 350px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(160,130,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    * { position: relative; z-index: 1; }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .header-text h2 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.3px;
+    }
+
+    .header-text p {
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* Config inputs */
+    .config-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 9px 11px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 11px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--border-focus);
+      background: var(--surface2);
+      box-shadow: 0 0 0 3px rgba(160,130,255,0.06);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--muted);
+    }
+
+    /* Textarea */
+    .textarea-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: none;
+      line-height: 1.6;
+      font-size: 12px;
+    }
+
+    .char-count {
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .toggle-row:hover {
+      border-color: rgba(160,130,255,0.2);
+      background: var(--surface2);
+    }
+
+    .toggle-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .toggle-desc {
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .toggle-switch {
+      width: 34px;
+      height: 18px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      position: relative;
+      transition: background 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    #useThinking:checked ~ .toggle-row .toggle-switch,
+    .toggle-switch.on {
+      background: rgba(160,130,255,0.2);
+      border-color: var(--accent);
+    }
+
+    #useThinking:checked ~ .toggle-row .toggle-switch::after,
+    .toggle-switch.on::after {
+      transform: translateX(16px);
+      background: var(--accent);
+    }
+
+    input[type="checkbox"] { display: none; }
+
+    /* Button */
+    .generate-btn {
+      position: relative;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #A082FF 0%, #7C6AFF 50%, #5EEAD4 100%);
+      color: #fff;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .generate-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .generate-btn:hover::before { opacity: 1; }
+    .generate-btn:hover { transform: translateY(-1px); }
+    .generate-btn:active { transform: translateY(0) scale(0.98); }
+
+    .generate-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn-icon {
+      font-size: 14px;
+    }
+
+    /* Thinking indicator */
+    .thinking-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(160,130,255,0.06);
+      border: 1px solid rgba(160,130,255,0.15);
+      border-radius: 8px;
+    }
+
+    .thinking-bar.active { display: flex; }
+
+    .dots {
+      display: flex;
+      gap: 3px;
+    }
+
+    .dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.75); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    .thinking-text {
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    /* Status */
+    .status {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status.info {
+      display: block;
+      background: rgba(94,234,212,0.06);
+      border: 1px solid rgba(94,234,212,0.2);
+      color: var(--accent2);
+    }
+
+    .status.success {
+      display: block;
+      background: rgba(94,234,212,0.06);
+      border: 1px solid rgba(94,234,212,0.2);
+      color: var(--success);
+    }
+
+    .status.error {
+      display: block;
+      background: rgba(255,107,138,0.06);
+      border: 1px solid rgba(255,107,138,0.2);
+      color: var(--error);
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 2px 0;
+    }
+
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">✦</div>
+    <div class="header-text">
+      <h2>AI Layout Generator</h2>
+      <p>POWERED BY CLAUDE</p>
+    </div>
+  </div>
+
+  <div class="config-row">
+    <div class="field">
+      <label>Server URL</label>
+      <input type="text" id="serverUrl" placeholder="http://localhost:8000" value="http://localhost:8000" />
+    </div>
+    <div class="field">
+      <label>API Key</label>
+      <input type="password" id="apiKey" placeholder="sk-••••••••" />
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>Load Saved Fixture</label>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <select id="fixtureSelect"
+        style="width: 100%; padding: 9px 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'SF Mono', monospace; font-size: 11px; outline: none;">
+        <option value="">Select a fixture...</option>
+      </select>
+    
+      <button id="loadFixtureBtn"
+        style="width: 100%; padding: 9px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 11px; font-weight: 600; cursor: pointer;">
+        Load
+      </button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="textarea-wrapper">
+    <label class="field" style="display:flex; flex-direction:column; gap:4px;">
+      <span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px;">Prompt</span>
+      <textarea id="prompt" placeholder="Describe the UI you want to create..."></textarea>
+    </label>
+    <div class="char-count" id="charCount">0 chars</div>
+  </div>
+
+
+
+
+
+  <button class="generate-btn" id="generateBtn" onclick="generate()">
+    <div class="btn-inner">
+      <span class="btn-icon">✦</span>
+      <span id="btnText">Generate Layout</span>
+    </div>
+  </button>
+
+  <div class="thinking-bar" id="thinkingBar">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <span class="thinking-text" id="thinkingText">Claude is designing your layout...</span>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <script>
+    const promptEl = document.getElementById('prompt');
+    const charCount = document.getElementById('charCount');
+    const fixtureSelect = document.getElementById('fixtureSelect');
+    const loadFixtureBtn = document.getElementById('loadFixtureBtn');
+
+    // Load fixtures on page load
+    async function loadFixtures() {
+      try {
+        const serverUrl = document.getElementById('serverUrl').value;
+        const apiKey = document.getElementById('apiKey').value;
+
+        if (!serverUrl || !apiKey) {
+          fixtureSelect.innerHTML = '<option value="">Select a fixture...</option>';
+          return;
+        }
+        
+        const response = await fetch(`${serverUrl}/api/v1/fixtures`, {
+          headers: { 'X-API-Key': apiKey }
+        });
+        
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        fixtureSelect.innerHTML = '<option value="">Select a fixture...</option>';
+        
+        data.fixtures.forEach(fixture => {
+          const option = document.createElement('option');
+          option.value = fixture.key;
+          const promptPreview = fixture.prompt.substring(0, 50) + (fixture.prompt.length > 50 ? '...' : '');
+          option.textContent = `${promptPreview} (${new Date(fixture.saved_at).toLocaleDateString()})`;
+          fixtureSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Failed to load fixtures:', err);
+      }
+    }
+
+    // Load fixture and render in Figma
+    loadFixtureBtn.addEventListener('click', async () => {
+      const key = fixtureSelect.value;
+      if (!key) {
+        setStatus('Please select a fixture', 'error');
+        return;
+      }
+      
+      try {
+        setStatus('Loading fixture...', 'loading');
+        const serverUrl = document.getElementById('serverUrl').value;
+        const apiKey = document.getElementById('apiKey').value;
+        
+        const response = await fetch(`${serverUrl}/api/v1/fixtures/${key}`, {
+          headers: apiKey ? { 'X-API-Key': apiKey } : {}
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        parent.postMessage({ pluginMessage: { type: 'render', layout: data.layout } }, '*');
+        setStatus('Fixture loaded successfully!', 'success');
+      } catch (err) {
+        setStatus('Failed to load fixture: ' + err.message, 'error');
+      }
+    });
+
+    // Load fixtures when server URL or API key changes
+    document.getElementById('serverUrl').addEventListener('change', loadFixtures);
+    document.getElementById('apiKey').addEventListener('change', loadFixtures);
+    
+    // Load fixtures on page load
+    setTimeout(loadFixtures, 500);
+
+    // Char count
+    promptEl.addEventListener('input', (e) => {
+      const len = e.target.value.length;
+      charCount.textContent = len + ' chars';
+    });
+
+
+
+    function setStatus(message, type) {
+      const el = document.getElementById('status');
+      el.textContent = message;
+      el.className = 'status ' + type;
+    }
+
+    function setThinking(active, text) {
+      const el = document.getElementById('thinkingBar');
+      el.className = active ? 'thinking-bar active' : 'thinking-bar';
+      if (text) document.getElementById('thinkingText').textContent = text;
+    }
+
+    async function generate() {
+      const prompt = promptEl.value.trim();
+      const serverUrl = document.getElementById('serverUrl').value.trim();
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const btn = document.getElementById('generateBtn');
+      const btnText = document.getElementById('btnText');
+
+      if (!prompt) { setStatus('Please enter a prompt.', 'error'); return; }
+      if (!apiKey) { setStatus('Please enter your API key.', 'error'); return; }
+
+      btn.disabled = true;
+      btnText.textContent = 'Generating...';
+      setStatus('', '');
+      setThinking(true, 'Claude is designing your layout...');
+
+      try {
+        const response = await fetch(`${serverUrl}/api/v1/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+          },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.message || `Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setThinking(false);
+        setStatus('Rendering in Figma...', 'info');
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'create-layout',
+            layout: data.layout,
+            thinking_used: data.thinking_used,
+          }
+        }, '*');
+
+      } catch (err) {
+        setThinking(false);
+        setStatus('⚠ ' + err.message, 'error');
+        btn.disabled = false;
+        btnText.textContent = 'Generate Layout';
+      }
+    }
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      const btn = document.getElementById('generateBtn');
+      const btnText = document.getElementById('btnText');
+      btn.disabled = false;
+      btnText.textContent = 'Generate Layout';
+
+      if (msg.type === 'done') {
+        setStatus(`✓ Created ${msg.nodeCount} nodes`, 'success');
+      } else if (msg.type === 'error') {
+        setStatus('⚠ ' + msg.message, 'error');
+      }
+    };
+  </script>
+
+</body>
+</html>
