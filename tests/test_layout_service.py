@@ -141,3 +141,68 @@ class TestLayoutService:
         mock_claude.complete.return_value = _ok()
         response = await service.generate("Build a kanban board with 3 columns and task cards")
         assert response.layout is not None
+
+
+class TestLayoutServiceWithCache:
+    """Tests for LayoutService cache integration."""
+
+    @pytest.fixture
+    def mock_claude(self) -> AsyncMock:
+        return AsyncMock()
+
+    @pytest.fixture
+    def mock_cache(self):
+        from unittest.mock import MagicMock
+        return MagicMock()
+
+    @pytest.fixture
+    def service_with_cache(self, mock_claude: AsyncMock, mock_cache) -> LayoutService:
+        return LayoutService(mock_claude, cache=mock_cache)
+
+    @pytest.mark.asyncio
+    async def test_cache_hit_skips_claude(
+        self, service_with_cache: LayoutService, mock_claude: AsyncMock, mock_cache
+    ):
+        """A valid cache hit must return immediately without calling Claude."""
+        mock_cache.get.return_value = (_valid_json(), False)
+        response = await service_with_cache.generate("Build a card")
+        assert response.layout.node_type.value == "auto_layout"
+        assert response.retried is False
+        assert response.thinking_used is False
+        mock_claude.complete.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_cache_miss_calls_claude_and_stores(
+        self, service_with_cache: LayoutService, mock_claude: AsyncMock, mock_cache
+    ):
+        """A cache miss must call Claude, then persist the result to cache."""
+        mock_cache.get.return_value = None
+        mock_claude.complete.return_value = _ok(thinking=False)
+        response = await service_with_cache.generate("Build a card")
+        assert response.layout is not None
+        mock_claude.complete.assert_called_once()
+        mock_cache.put.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_invalid_cache_falls_through_to_claude(
+        self, service_with_cache: LayoutService, mock_claude: AsyncMock, mock_cache
+    ):
+        """If the cached response fails validation, Claude must be called as fallback.
+
+        Simulates a cache entry with a design-token violation (disallowed colour
+        #BADA55), causing validate_output to raise ValidationError inside
+        LayoutService and triggering the Claude fallback.
+        """
+        import json as _json
+        stale_node = {
+            "node_type": "frame",
+            "name": "Stale",
+            "style": {"fill": "#BADA55"},
+            "children": [],
+        }
+        mock_cache.get.return_value = (_json.dumps(stale_node), False)
+        mock_claude.complete.return_value = _ok(thinking=True)
+        response = await service_with_cache.generate("Rebuild card")
+        mock_claude.complete.assert_called_once()
+        assert response.layout.node_type.value == "auto_layout"
+
