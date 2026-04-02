@@ -1,0 +1,26 @@
+name: PR Syntax Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  syntax-check:
+    name: Ruff syntax & style check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff==0.4.4
+
+      - name: Run ruff syntax check on src
+        run: ruff check src tests --select E,F,W --output-format github
