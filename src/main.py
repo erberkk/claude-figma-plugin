@@ -21,6 +21,7 @@ _app_state: dict[str, Any] = {}
 
 _PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "system_prompt.md"
 
+
 def _prompt_version() -> str:
     """Return a short SHA-256 hash of the system prompt file.
 
@@ -30,10 +31,11 @@ def _prompt_version() -> str:
     content = _PROMPT_PATH.read_text(encoding="utf-8")
     return hashlib.sha256(content.encode()).hexdigest()[:16]
 
+
 def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
     settings = get_settings()
-    setup_logging(settings.log_level)
+    setup_logging(settings.log_level, settings.log_format)
 
     app = FastAPI(
         title="Figma Layout Generator",
